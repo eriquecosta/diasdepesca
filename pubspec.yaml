@@ -1,0 +1,33 @@
+name: dias_de_pesca
+description: "App de sugestao de melhores dias para pesca baseado nas fases da lua."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Navegacao e injecao de dependencias
+  flutter_modular: ^6.3.4
+
+  # Gerenciamento de estado
+  mobx: ^2.3.3
+  flutter_mobx: ^2.2.1
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+  # Code generation para MobX
+  build_runner: ^2.4.13
+  mobx_codegen: ^2.6.1
+
+flutter:
+  uses-material-design: true
