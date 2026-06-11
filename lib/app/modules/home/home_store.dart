@@ -60,16 +60,144 @@ abstract class _HomeStoreBase with Store {
           return DateTime(local.year, local.month, local.day);
         }).toSet();
 
+    // Map local date -> phase for quick lookups
+    final Map<DateTime, MoonPhase> eventByLocalDate = {};
+    for (final ev in phaseEvents) {
+      final local = ev.instantUtc.toLocal();
+      final d = DateTime(local.year, local.month, local.day);
+      eventByLocalDate.putIfAbsent(d, () => ev.phase);
+    }
+
+    // Helper to add ranges of dates to sets
+    DateTime _d(DateTime base, int offset) =>
+        DateTime(base.year, base.month, base.day).add(Duration(days: offset));
+
+    final Set<DateTime> good = {};
+    final Set<DateTime> bad = {};
+
+    // Collect phase event dates grouped by phase (date-only), deduplicated and sorted
+    final eventsByPhase = <MoonPhase, List<DateTime>>{};
+    for (final phase in MoonPhase.values) {
+      eventsByPhase[phase] = [];
+    }
+    for (final ev in phaseEvents) {
+      final local = ev.instantUtc.toLocal();
+      final d = DateTime(local.year, local.month, local.day);
+      eventsByPhase[ev.phase]!.add(d);
+    }
+    // Deduplicate and sort each phase list
+    for (final phase in MoonPhase.values) {
+      final list = eventsByPhase[phase]!;
+      final uniq = list.toSet().toList();
+      uniq.sort((a, b) {
+        if (a.year != b.year) return a.year.compareTo(b.year);
+        if (a.month != b.month) return a.month.compareTo(b.month);
+        return a.day.compareTo(b.day);
+      });
+      eventsByPhase[phase] = uniq;
+    }
+
+    // GOOD rules (new requirements)
+    // 1) First period: from lastQuarter (Lua Minguante) up to (newMoon - 3 days)
+    for (final d in eventsByPhase[MoonPhase.lastQuarter] ?? []) {
+      final nextNew = (eventsByPhase[MoonPhase.newMoon] ?? []).firstWhere(
+        (nd) => nd.isAfter(d),
+        orElse: () => _d(d, 30),
+      );
+      final start = d;
+      final end = _d(nextNew, -3);
+      for (
+        var cur = start;
+        !cur.isAfter(end);
+        cur = cur.add(const Duration(days: 1))
+      ) {
+        good.add(cur);
+      }
+    }
+
+    // 2) Second period: from firstQuarter (Crescente) up to (fullMoon - 4 days)
+    for (final d in eventsByPhase[MoonPhase.firstQuarter] ?? []) {
+      final nextFull = (eventsByPhase[MoonPhase.fullMoon] ?? []).firstWhere(
+        (fd) => fd.isAfter(d),
+        orElse: () => _d(d, 30),
+      );
+      final start = d;
+      final end = _d(nextFull, -4);
+      for (
+        var cur = start;
+        !cur.isAfter(end);
+        cur = cur.add(const Duration(days: 1))
+      ) {
+        good.add(cur);
+      }
+    }
+
+    // BAD rules
+    // For each full moon: from fullMoon - 3 to fullMoon + 2
+    for (final d in eventsByPhase[MoonPhase.fullMoon] ?? []) {
+      final start = _d(d, -3);
+      final end = _d(d, 2);
+      for (
+        var cur = start;
+        !cur.isAfter(end);
+        cur = cur.add(const Duration(days: 1))
+      ) {
+        bad.add(cur);
+      }
+    }
+
+    // Additional BAD rule: for each new moon, from newMoon +3 to newMoon +4
+    for (final d in eventsByPhase[MoonPhase.newMoon] ?? []) {
+      for (var i = 3; i <= 4; i++) {
+        bad.add(_d(d, i));
+      }
+    }
+
+    // Build a map date -> quality (only good days for now)
+    final Map<DateTime, FishingQuality> qualityMap = {};
+    for (final d in good) {
+      qualityMap[d] = FishingQuality.good;
+    }
+    // Apply bad days with precedence over good
+    for (final d in bad) {
+      qualityMap[d] = FishingQuality.bad;
+    }
+
+    // INTERMEDIATE: mark any date within the display range that is not yet marked
+    final startDisplay = DateTime(
+      firstDisplayDate.year,
+      firstDisplayDate.month,
+      firstDisplayDate.day,
+    );
+    final endDisplay = DateTime(
+      lastDisplayDate.year,
+      lastDisplayDate.month,
+      lastDisplayDate.day,
+    );
+    for (
+      var cur = startDisplay;
+      !cur.isAfter(endDisplay);
+      cur = cur.add(const Duration(days: 1))
+    ) {
+      if (!qualityMap.containsKey(cur)) {
+        qualityMap[cur] = FishingQuality.intermediate;
+      }
+    }
+
+    // Note: do not remove current date — current day should be marked when applicable
+
     return List<CalendarDay>.generate(totalDays, (index) {
       final date = firstDisplayDate.add(Duration(days: index));
       final phase = MoonService.phaseForDate(date);
       final localDate = DateTime(date.year, date.month, date.day);
       final isPhaseChange = eventDays.contains(localDate);
+      final quality = qualityMap[localDate] ?? FishingQuality.none;
       return CalendarDay(
         date: date,
         isInCurrentMonth: date.month == displayedMonth.month,
         phase: phase,
         isPhaseChange: isPhaseChange,
+        quality: quality,
       );
     });
   }
@@ -101,11 +229,15 @@ class CalendarDay {
   final bool isInCurrentMonth;
   final MoonPhase phase;
   final bool isPhaseChange;
+  final FishingQuality quality;
 
   CalendarDay({
     required this.date,
     required this.isInCurrentMonth,
     required this.phase,
     required this.isPhaseChange,
+    this.quality = FishingQuality.none,
   });
 }
+
+enum FishingQuality { none, bad, intermediate, good }

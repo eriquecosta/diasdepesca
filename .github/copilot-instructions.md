@@ -42,9 +42,7 @@ rtk proxy <cmd>       # Run raw (no filtering) but track usage
 
 ## Implementações atuais
 
-- **MoonService:** `lib/core/moon/moon_service.dart` implementa cálculo local de instantes de fase lunar (Jean Meeus-like). Fornece `phaseEventsBetween(start, end)` e `phaseEventForLocalDate(date)`; os instantes são calculados em UTC e convertidos para local quando exibidos.
-- **HomePage:** calendário mensal com grid 7x6, legendas, ícones PNG para fases e navegação entre meses. `HomeDayCard` mostra ícone de fase com fundo contrastante e é clicável — ao clicar em um dia de mudança de fase, o app exibe um `AlertDialog` com a hora do evento (local + UTC).
-- **Validação:** os instantes calculados foram verificados contra amostras públicas (ex.: INMET) e ajustados para coincidir dentro de alguns minutos.
+ - criar o calendário mensal com marcação de fases e cores de qualidade; (implementado: classificação de dias Ruim/Intermediário/Bom com cores e regras baseadas em fases)
 
 
 ## Documentação de projeto
@@ -144,11 +142,7 @@ rtk flutter test
 
 ## Diretrizes para Respostas do Copilot
 
-- Ao implementar feature, proponha primeiro a estrutura em camadas e depois o codigo.
-- Sempre que possivel, inclua teste junto da implementacao.
-- Evite introduzir bibliotecas novas sem necessidade real.
-- Em refactors, preserve comportamento existente e explicite riscos de regressao.
-
+ - O dia atual pode receber classificação quando aplicável (não é mais desmarcado automaticamente).
 ## iOS UIScene Lifecycle (iOS 13+)
 
 O projeto está configurado para usar o ciclo de vida moderno do UIScene, conforme recomendado pela Apple:

@@ -114,6 +114,26 @@ class HomePage extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 16,
+                      runSpacing: 8,
+                      children: const [
+                        _QualityLegendItem(
+                          colorHex: 0xFFFF2400,
+                          label: 'Dias Ruins',
+                        ),
+                        _QualityLegendItem(
+                          colorHex: 0xFFFFA500,
+                          label: 'Dias Intermediários',
+                        ),
+                        _QualityLegendItem(
+                          colorHex: 0xFF52CC02,
+                          label: 'Dias Bons',
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 16),
                     Align(
                       alignment: Alignment.centerRight,
@@ -153,6 +173,32 @@ class _LegendItem extends StatelessWidget {
           ),
           padding: const EdgeInsets.all(4),
           child: Image.asset(asset, width: 16, height: 16, fit: BoxFit.contain),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _QualityLegendItem extends StatelessWidget {
+  final int colorHex;
+  final String label;
+
+  const _QualityLegendItem({required this.colorHex, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 18,
+          height: 18,
+          decoration: BoxDecoration(
+            color: Color(colorHex),
+            shape: BoxShape.circle,
+          ),
         ),
         const SizedBox(width: 8),
         Text(label, style: Theme.of(context).textTheme.bodySmall),
