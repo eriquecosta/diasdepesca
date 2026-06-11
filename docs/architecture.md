@@ -1,5 +1,10 @@
 # Arquitetura do projeto
 
+- [README](../README.md)
+- [Diretrizes de código](coding-guidelines.md)
+- [Estratégia de testes](testing.md)
+- [Roadmap](roadmap.md)
+
 Este documento descreve a arquitetura e as decisões de responsabilidade que guiam o app `Dias de Pesca`.
 
 ## Visão geral

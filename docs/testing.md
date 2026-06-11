@@ -1,5 +1,10 @@
 # Estratégia de testes
 
+- [README](../README.md)
+- [Arquitetura](architecture.md)
+- [Diretrizes de código](coding-guidelines.md)
+- [Roadmap](roadmap.md)
+
 Este documento descreve a abordagem de testes do projeto `Dias de Pesca`.
 
 ## Tipos de teste

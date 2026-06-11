@@ -1,5 +1,10 @@
 # Roadmap do projeto
 
+- [README](../README.md)
+- [Arquitetura](architecture.md)
+- [Diretrizes de código](coding-guidelines.md)
+- [Estratégia de testes](testing.md)
+
 Este documento reúne o backlog e os próximos passos para o app `Dias de Pesca`.
 
 ## Estado atual

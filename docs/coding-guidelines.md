@@ -1,5 +1,10 @@
 # Diretrizes de código
 
+- [README](../README.md)
+- [Arquitetura](architecture.md)
+- [Estratégia de testes](testing.md)
+- [Roadmap](roadmap.md)
+
 Este documento reúne as principais convenções do projeto para manter o código consistente e fácil de manter.
 
 ## Nomeação

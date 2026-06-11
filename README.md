@@ -99,8 +99,8 @@ O projeto já inclui um teste de exemplo para a `HomeStore` e um teste de widget
 
 ## Documentos de suporte
 
-- `docs/architecture.md` — explica a arquitetura e a separação de responsabilidades.
-- `docs/coding-guidelines.md` — reúne convenções de código e estilo do projeto.
-- `docs/testing.md` — define a estratégia de testes.
-- `docs/roadmap.md` — lista o backlog e os próximos passos.
+- [Arquitetura](docs/architecture.md) — explica a arquitetura e a separação de responsabilidades.
+- [Diretrizes de código](docs/coding-guidelines.md) — reúne convenções de código e estilo do projeto.
+- [Estratégia de testes](docs/testing.md) — define a estratégia de testes.
+- [Roadmap](docs/roadmap.md) — lista o backlog e os próximos passos.
 

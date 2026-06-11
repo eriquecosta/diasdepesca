@@ -49,6 +49,8 @@ Use estes arquivos para manter o projeto documentado à medida que evolui:
 - `docs/testing.md` — estratégia de testes e tipo de cobertura esperada.
 - `docs/roadmap.md` — backlog, próximas entregas e itens de evolução.
 
+Os arquivos em `docs/` usam links relativos e são navegáveis entre si.
+
 Sempre que houver uma mudança de arquitetura, regra de código ou estratégia de testes, atualize o documento correspondente.
 
 ## Convencoes Dart/Flutter
