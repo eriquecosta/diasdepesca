@@ -7,7 +7,15 @@ O objetivo principal é exibir um calendário mensal que marque:
 - os dias de mudança de fase lunar,
 - os dias em que a pesca é considerada ruim, intermediária ou boa.
 
-A classificação de qualidade dos dias de pesca será definida mais adiante, mas a base do app é uma arquitetura limpa, com cálculo lunar local e UI modular.
+ A classificação de qualidade dos dias de pesca será definida mais adiante, mas a base do app é uma arquitetura limpa, com cálculo lunar local e UI modular.
+
+## O que funciona agora
+
+- **HomePage / Calendário:** a tela principal apresenta um calendário mensal em grid 7x6 (domingo → sábado), navegável por mês, com botão `Hoje`. As células (`HomeDayCard`) exibem a data, destaque para o dia atual e (quando aplicável) um ícone representando a fase lunar.
+- **Marcação de mudança de fase:** o app calcula instantes precisos (UTC) das mudanças de fase lunar e mapeia cada evento ao dia local correspondente — o `HomeStore` marca esses dias como "mudança de fase" para exibição no calendário.
+- **Interação:** tocar em um dia que contém um evento de fase abre um `AlertDialog` com a hora do evento em horário local (e a equivalência em UTC), formatada para clareza.
+- **Ícones e legenda:** são usados PNGs para as quatro fases (nova, crescente, cheia, minguante) com fundo circular contrastante para garantir legibilidade; há uma legenda visual abaixo do calendário.
+- **Cálculo lunar local:** `lib/core/moon/moon_service.dart` contém o `MoonService`, que implementa fórmulas inspiradas em Jean Meeus para estimar instantes de fase lunar. O serviço expõe `phaseEventsBetween(...)` e `phaseEventForLocalDate(...)` e foi validado contra referências (ex.: INMET) com precisão de minutos.
 
 ---
 
@@ -32,27 +40,12 @@ Este projeto foi criado para ser:
 
 ---
 
-## Estrutura do projeto
+## Documentação por módulo
 
-```text
-lib/
-  app/
-    app_module.dart
-    app_widget.dart
-    modules/
-      home/
-        home_module.dart
-        home_page.dart
-        home_store.dart
-        home_store.g.dart
-    pages/
-  core/
-```
+Documentação detalhada dos módulos está em `docs/`. Consulte os documentos abaixo para entender responsabilidades, fluxo e integrações:
 
-- `app_module.dart` define as rotas e módulos do `flutter_modular`.
-- `app_widget.dart` contém o `MaterialApp.router` e tema.
-- `modules/home/` concentra o módulo inicial funcional.
-- `core/` é reservado para serviços, utilitários e lógica de cálculo lunar.
+- [Home (calendário)](docs/home.md) — descrição da `HomePage`, `HomeStore` e integração com o `MoonService`.
+- [Arquitetura](docs/architecture.md) — visão geral da arquitetura do projeto.
 
 ---
 

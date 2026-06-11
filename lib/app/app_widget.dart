@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:dias_de_pesca/core/theme/app_theme.dart';
 
 class AppWidget extends StatelessWidget {
   const AppWidget({super.key});
@@ -9,10 +10,7 @@ class AppWidget extends StatelessWidget {
     return MaterialApp.router(
       title: 'Dias de Pesca',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.themeData,
       routerConfig: Modular.routerConfig,
     );
   }

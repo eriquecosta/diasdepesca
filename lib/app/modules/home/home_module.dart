@@ -4,7 +4,7 @@ import 'home_store.dart';
 
 class HomeModule extends Module {
   @override
-  void exportedBinds(Injector i) {
+  void binds(Injector i) {
     i.addSingleton(HomeStore.new);
   }
 

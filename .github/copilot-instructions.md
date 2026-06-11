@@ -1,4 +1,3 @@
-<!-- rtk-instructions v2 -->
 # RTK — Token-Optimized CLI
 
 **rtk** is a CLI proxy that filters and compresses command outputs, saving 60-90% tokens.
@@ -33,11 +32,20 @@ rtk proxy <cmd>       # Run raw (no filtering) but track usage
 - **Dominio:** app de sugestao de melhores dias para pesca baseado nas fases da lua.
 - **Funcionalidade principal:** exibir um calendario mensal marcando os dias de mudanca de fase lunar e colorindo os dias de pesca conforme qualidade (ruim, intermediario, bom). As regras de classificacao serao definidas posteriormente.
 - **Calculo lunar:** realizado localmente (sem internet), usando algoritmo astronomico baseado em Jean Meeus. Encapsulado em service em `core/`.
-- **Tipo:** app Flutter (escopo inicial, em evolucao incremental).
+- **Serviço lunar (core):** `lib/core/moon/moon_service.dart` implementa `MoonService` com algoritmo astronômico preciso baseado em Jean Meeus. Métodos:\n  - `phaseForDate(DateTime)`: fase predominante do dia (aproximado).\n  - `phaseEventsBetween(start, end)`: instantes UTC exatos de eventos em intervalo.\n  - `phaseEventForLocalDate(date)`: encontra evento que ocorre em um dia local.\n  - Validado contra INMET 2026 com precisão de minutos.\n- **HomePage:** calendário mensal (grid 7x6, domingo-sábado) com:\n  - Marcação visual de fases lunares com ícones PNG e fundo contrastante.\n  - Clique em dia com fase mostra `AlertDialog` com data/hora local do evento.\n  - Legenda visual das 4 fases, botões de navegação (`<` `>`) e botão \"Hoje\".\n- **Tipo:** app Flutter (escopo inicial, em evolucao incremental).
 - **Objetivo:** priorizar simplicidade, legibilidade e baixo acoplamento.
 - **Direcao:** gerar codigo pronto para manutencao, sem excesso de abstracoes.
 - **Gerenciamento de rotas:** `flutter_modular`.
 - **Gerenciamento de estado:** `mobx` com code generation (`mobx_codegen` + `build_runner`).
+- **Tema inicial:** paleta náutica com primária `#2A6F97`, secundária `#014F86`, terciária `#A9D6E5`; fundos de tela devem ser brancos.
+- **Local do tema:** centralize estilos em `lib/core/theme/app_theme.dart` e use `Theme.of(context)` para cores e fundos.
+
+## Implementações atuais
+
+- **MoonService:** `lib/core/moon/moon_service.dart` implementa cálculo local de instantes de fase lunar (Jean Meeus-like). Fornece `phaseEventsBetween(start, end)` e `phaseEventForLocalDate(date)`; os instantes são calculados em UTC e convertidos para local quando exibidos.
+- **HomePage:** calendário mensal com grid 7x6, legendas, ícones PNG para fases e navegação entre meses. `HomeDayCard` mostra ícone de fase com fundo contrastante e é clicável — ao clicar em um dia de mudança de fase, o app exibe um `AlertDialog` com a hora do evento (local + UTC).
+- **Validação:** os instantes calculados foram verificados contra amostras públicas (ex.: INMET) e ajustados para coincidir dentro de alguns minutos.
+
 
 ## Documentação de projeto
 
@@ -52,6 +60,8 @@ Use estes arquivos para manter o projeto documentado à medida que evolui:
 Os arquivos em `docs/` usam links relativos e são navegáveis entre si.
 
 Sempre que houver uma mudança de arquitetura, regra de código ou estratégia de testes, atualize o documento correspondente.
+
+Observação: a documentação detalhada de cada módulo ficará dentro da pasta `docs/` (ex.: `docs/home.md`). O `README.md` deve permanecer enxuto e apenas referenciar os documentos por módulo através de links, evitando duplicação de conteúdo.
 
 ## Convencoes Dart/Flutter
 
@@ -138,4 +148,15 @@ rtk flutter test
 - Sempre que possivel, inclua teste junto da implementacao.
 - Evite introduzir bibliotecas novas sem necessidade real.
 - Em refactors, preserve comportamento existente e explicite riscos de regressao.
-<!-- /rtk-instructions -->
+
+## iOS UIScene Lifecycle (iOS 13+)
+
+O projeto está configurado para usar o ciclo de vida moderno do UIScene, conforme recomendado pela Apple:
+
+- **SceneDelegate.swift**: Gerencia o ciclo de vida das cenas (telas). Não edite manualmente, pois é gerado pelo Xcode.
+- **Info.plist**: Contém `UIApplicationSceneManifest` que define o suporte a múltiplas cenas (atualmente desabilitado com `UIApplicationSupportsMultipleScenes=false`).
+- **AppDelegate.swift**: Mantém compatibilidade com eventos de nível de aplicação (ex.: push notifications, app lifecycle global).
+
+Isso garante compatibilidade com iOS 13+ e evita avisos futuros do Xcode sobre obsolescência de `UIApplication` lifecycle.
+
+**Não remova** as chaves `UIApplicationSceneManifest` do Info.plist, pois isso causará avisos de deprecação em versões futuras do iOS/Xcode.

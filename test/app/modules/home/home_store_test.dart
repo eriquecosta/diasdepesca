@@ -12,5 +12,15 @@ void main() {
     test('deve ser instanciado sem erros', () {
       expect(store, isNotNull);
     });
+
+    test('métodos de navegação não lançam e alteram monthLabel', () {
+      final before = store.monthLabel;
+      store.moveToNextMonth();
+      expect(store.monthLabel, isNot(equals(before)));
+      store.moveToPreviousMonth();
+      expect(store.monthLabel, equals(before));
+      store.goToCurrentMonth();
+      expect(store.monthLabel, isNotNull);
+    });
   });
 }
