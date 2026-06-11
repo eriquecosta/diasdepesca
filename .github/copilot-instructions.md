@@ -39,6 +39,18 @@ rtk proxy <cmd>       # Run raw (no filtering) but track usage
 - **Gerenciamento de rotas:** `flutter_modular`.
 - **Gerenciamento de estado:** `mobx` com code generation (`mobx_codegen` + `build_runner`).
 
+## Documentação de projeto
+
+Use estes arquivos para manter o projeto documentado à medida que evolui:
+
+- `README.md` — visão geral do app, como rodar e pontos principais do projeto.
+- `docs/architecture.md` — decisões de arquitetura, responsabilidades e evolução estrutural.
+- `docs/coding-guidelines.md` — convenções de código, nomenclatura e estilo.
+- `docs/testing.md` — estratégia de testes e tipo de cobertura esperada.
+- `docs/roadmap.md` — backlog, próximas entregas e itens de evolução.
+
+Sempre que houver uma mudança de arquitetura, regra de código ou estratégia de testes, atualize o documento correspondente.
+
 ## Convencoes Dart/Flutter
 
 - Use null-safety e tipagem explicita em propriedades e retornos publicos.

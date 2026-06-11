@@ -97,3 +97,10 @@ O projeto já inclui um teste de exemplo para a `HomeStore` e um teste de widget
 - Não edite manualmente arquivos gerados como `*.g.dart`.
 - As decisões de arquitetura e o estilo do código são orientados pelo arquivo `./.github/copilot-instructions.md`.
 
+## Documentos de suporte
+
+- `docs/architecture.md` — explica a arquitetura e a separação de responsabilidades.
+- `docs/coding-guidelines.md` — reúne convenções de código e estilo do projeto.
+- `docs/testing.md` — define a estratégia de testes.
+- `docs/roadmap.md` — lista o backlog e os próximos passos.
+
