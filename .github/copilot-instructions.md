@@ -32,7 +32,7 @@ rtk proxy <cmd>       # Run raw (no filtering) but track usage
 - **Dominio:** app de sugestao de melhores dias para pesca baseado nas fases da lua.
 - **Funcionalidade principal:** exibir um calendario mensal marcando os dias de mudanca de fase lunar e colorindo os dias de pesca conforme qualidade (ruim, intermediario, bom). As regras de classificacao serao definidas posteriormente.
 - **Calculo lunar:** realizado localmente (sem internet), usando algoritmo astronomico baseado em Jean Meeus. Encapsulado em service em `core/`.
-- **Serviço lunar (core):** `lib/core/moon/moon_service.dart` implementa `MoonService` com algoritmo astronômico preciso baseado em Jean Meeus. Métodos:\n  - `phaseForDate(DateTime)`: fase predominante do dia (aproximado).\n  - `phaseEventsBetween(start, end)`: instantes UTC exatos de eventos em intervalo.\n  - `phaseEventForLocalDate(date)`: encontra evento que ocorre em um dia local.\n  - Validado contra INMET 2026 com precisão de minutos.\n- **HomePage:** calendário mensal (grid 7x6, domingo-sábado) com:\n  - Marcação visual de fases lunares com ícones PNG e fundo contrastante.\n  - Clique em dia com fase mostra `AlertDialog` com data/hora local do evento.\n  - Legenda visual das 4 fases, botões de navegação (`<` `>`) e botão \"Hoje\".\n- **Tipo:** app Flutter (escopo inicial, em evolucao incremental).
+- **Serviço lunar (core):** `lib/core/moon/moon_service.dart` implementa `MoonService` com algoritmo astronômico preciso baseado em Jean Meeus. Métodos:\n  - `phaseForDate(DateTime)`: fase predominante do dia (aproximado).\n  - `phaseEventsBetween(start, end)`: instantes UTC exatos de eventos em intervalo.\n  - `phaseEventForLocalDate(date)`: encontra evento que ocorre em um dia local.\n  - Validado contra INMET 2026 com precisão de minutos.\n- **CalendarPage:** calendário mensal (grid 7x6, domingo-sábado) com:\n  - Marcação visual de fases lunares com ícones PNG e fundo contrastante.\n  - Clique em dia com fase mostra `AlertDialog` com data/hora local do evento.\n  - Legenda visual das 4 fases, botões de navegação (`<` `>`) e botão \"Hoje\".\n- **Tipo:** app Flutter (escopo inicial, em evolucao incremental).
 - **Objetivo:** priorizar simplicidade, legibilidade e baixo acoplamento.
 - **Direcao:** gerar codigo pronto para manutencao, sem excesso de abstracoes.
 - **Gerenciamento de rotas:** `flutter_modular`.
@@ -59,7 +59,7 @@ Os arquivos em `docs/` usam links relativos e são navegáveis entre si.
 
 Sempre que houver uma mudança de arquitetura, regra de código ou estratégia de testes, atualize o documento correspondente.
 
-Observação: a documentação detalhada de cada módulo ficará dentro da pasta `docs/` (ex.: `docs/home.md`). O `README.md` deve permanecer enxuto e apenas referenciar os documentos por módulo através de links, evitando duplicação de conteúdo.
+Observação: a documentação detalhada de cada módulo ficará dentro da pasta `docs/` (ex.: `docs/calendar.md`). O `README.md` deve permanecer enxuto e apenas referenciar os documentos por módulo através de links, evitando duplicação de conteúdo.
 
 ## Convencoes Dart/Flutter
 
@@ -75,19 +75,20 @@ Arquivos sempre em `snake_case.dart`. Sufixo obrigatorio conforme tipo:
 
 | Tipo        | Arquivo                    | Classe                  |
 |-------------|----------------------------|-------------------------|
-| Pagina      | `home_page.dart`           | `HomePage`              |
-| Store MobX  | `home_store.dart`          | `HomeStore`             |
-| Modulo      | `home_module.dart`         | `HomeModule`            |
+| Pagina      | `calendar_page.dart`           | `CalendarPage`              |
+| Store MobX  | `calendar_store.dart`          | `CalendarStore`             |
+| Modulo      | `calendar_module.dart`         | `CalendarModule`            |
 | Widget      | `product_card_widget.dart` | `ProductCardWidget`     |
 | Repositorio | `user_repository.dart`     | `UserRepository`        |
 | Servico     | `auth_service.dart`        | `AuthService`           |
+| Interface   | `service_interface.dart`   | `ServiceInterface`      |
 | Model       | `user_model.dart`          | `UserModel`             |
 | Entity      | `user_entity.dart`         | `UserEntity`            |
 
 Regras adicionais:
 
-- O arquivo gerado pelo `build_runner` para MobX usa sufixo `.g.dart` (ex.: `home_store.g.dart`); nunca edite manualmente.
-- Nomes de rotas no `Module` em snake_case precedidos de `/` (ex.: `'/home'`, `'/product-detail'`).
+- O arquivo gerado pelo `build_runner` para MobX usa sufixo `.g.dart` (ex.: `calendar_store.g.dart`); nunca edite manualmente.
+- Nomes de rotas no `Module` em snake_case precedidos de `/` (ex.: `'/calendar'`, `'/product-detail'`).
 - Constantes globais em `SCREAMING_SNAKE_CASE` apenas para valores primitivos fixos; prefira `static const` em classe.
 
 ## Arquitetura (Camadas)
@@ -118,12 +119,60 @@ Regras de dependencia:
 - `core/` nao importa nada de `app/`.
 - Modulos se comunicam por rotas do flutter_modular, nunca por import direto.
 
+## Padrao API REST (core/services)
+
+Para integracoes REST, adotar `lib/core/services/` como padrao unico para contratos, repositorios e modelos:
+
+```text
+lib/
+  core/
+    services/
+      interfaces/
+        service_interface.dart
+      repositories/
+        # classes concretas de repositorios de servico
+      models/
+        # modelos anotados para serializacao/deserializacao JSON
+```
+
+Regras obrigatorias:
+
+- `lib/core/services/interfaces/service_interface.dart` deve conter uma `abstract class ServiceInterface<T>` com os metodos `Future<bool> fetch()` e `Future<T> get()`.
+- Toda classe em `lib/core/services/repositories/` deve implementar `ServiceInterface` e os dois metodos do contrato (`fetch` e `get`).
+- Toda classe em `lib/core/services/models/` deve usar `json_annotation` para facilitar conversao de dados recebidos dos servicos.
+- Para modelos anotados, manter codegen com `build_runner` e arquivos `*.g.dart` sem edicao manual.
+- Para repositorios com cache local, `fetch` deve sincronizar dados remotos e persistir localmente quando houver sucesso.
+- Quando houver politica diaria de cache, a comparacao deve considerar apenas dia/mes/ano (ignorar hora).
+
+## Base Local (ObjectBox)
+
+Para persistencia local, adotar ObjectBox como padrao em `lib/core/local/`:
+
+```text
+lib/
+  core/
+    local/
+      models/
+      repositories/
+      objectbox/
+```
+
+Regras obrigatorias:
+
+- Entidades locais devem usar `@Entity()` e `@Id()` do ObjectBox.
+- Repositorios locais devem encapsular operacoes de `Box` (salvar, buscar, atualizar, remover).
+- Sempre que possivel, compartilhar o model REST com a base local por meio de serializacao (`toJson`/`fromJson`) para evitar duplicacao de regras de mapeamento.
+- Quando o model REST for complexo para persistencia direta, salvar uma copia em JSON (payload) no model local e converter via helpers (`fromWeatherModel` / `toWeatherModel`).
+- Codegen do ObjectBox deve ser executado com `build_runner`; nao editar manualmente `objectbox.g.dart`.
+
 ## Testes
 
 - Crie testes unitarios para regras de negocio e repositorios.
 - Crie testes de widget para comportamento visual e interacoes essenciais.
 - Crie testes de integracao para fluxos criticos (ex.: autenticacao, fluxo principal).
 - Para testes deterministas com tempo/IO externo, prefira injecao de funcoes/dependencias.
+- Para servicos REST, prefira mock de API (sem chamadas reais de rede).
+- Para base local, prefira mock da camada de persistencia (Box/repositorio) em testes unitarios.
 
 ## Checklist Antes de PR
 

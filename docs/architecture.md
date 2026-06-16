@@ -4,6 +4,7 @@
 - [Diretrizes de código](coding-guidelines.md)
 - [Estratégia de testes](testing.md)
 - [Roadmap](roadmap.md)
+- [Weather Data](weather_data.md)
 
 Este documento descreve a arquitetura e as decisões de responsabilidade que guiam o app `Dias de Pesca`.
 
@@ -24,12 +25,22 @@ lib/
     app_module.dart
     app_widget.dart
     modules/
-      home/
-        home_module.dart
-        home_page.dart
-        home_store.dart
+      calendar/
+        calendar_module.dart
+        calendar_page.dart
+        calendar_store.dart
     pages/
   core/
+    moon/
+    services/
+      interfaces/
+      models/
+      repositories/
+    local/
+      models/
+      repositories/
+      objectbox/
+    theme/
 ```
 
 ### `app/`
@@ -42,6 +53,30 @@ lib/
 
 - Destinado a serviços, utilitários e regras de negócio que não pertencem a uma tela específica.
 - Deve ser independente de `app/` e de widgets.
+
+Subcamadas atuais em `core/`:
+
+- `moon/`: cálculo de fases lunares e eventos por data.
+- `services/`: integrações REST, contratos e modelos de API.
+  - `interfaces/`: contrato base (`ServiceInterface<T>` com `fetch` e `get`).
+  - `models/`: serialização JSON via `json_annotation`.
+  - `repositories/`: implementação de chamadas HTTP.
+- `local/`: persistência local com ObjectBox.
+  - `models/`: entidades de persistência (`@Entity`).
+  - `repositories/`: operações de leitura/gravação no cache local.
+  - `objectbox/`: inicialização e acesso ao `Store`.
+
+## Fluxo de dados (Weather)
+
+Implementação atual de clima (`WeatherRepository` + `WeatherLocalRepository`):
+
+1. `fetch()` consulta o último registro local.
+2. Se já houver cache do dia atual (mesmo dia/mês/ano), não chama API e retorna `true`.
+3. Se não houver cache ou o cache for de dia anterior, executa GET na Open-Meteo.
+4. Em sucesso, converte para `WeatherModel` e salva localmente no ObjectBox.
+5. `get()` retorna sempre o último registro local convertido em `WeatherModel`.
+
+Esse fluxo reduz chamadas de rede e mantém disponibilidade offline para leitura.
 
 ## Convenções de responsabilidade
 
@@ -62,22 +97,22 @@ Serviço de cálculo lunar com precisão astronômica:
   - `phaseEventForLocalDate(date)`: encontra evento de fase que ocorre em um dia local específico.
 - **Conversão**: instantes são calculados em UTC e convertidos automaticamente para local via `toLocal()`.
 
-## HomePage (app/modules/home/)
+## CalendarPage (app/modules/calendar/)
 
 Implementação funcional do calendário lunar com interação:
 
-- **HomeStore**: 
+- **CalendarStore**:
   - Mantém `displayedMonth` e `currentDate`.
   - Calcula `calendarDays` usando `MoonService.phaseEventsBetween()` para marcar apenas dias com eventos reais.
   - Fornece `monthLabel`, `isToday()`, navegação entre meses.
   
-- **HomePage**: 
+- **CalendarPage**:
   - Renderiza calendário em grid 7×6 (semanas completas, domingo primeiro).
   - Exibe rótulos de dias da semana (Dom, Seg, Ter, ...).
   - Legenda visual abaixo do grid com ícones e nomes das 4 fases.
   - Botões `<` e `>` para navegar; botão "Hoje" retorna ao mês atual.
   
-- **HomeDayCard**:
+- **CalendarDayCard**:
   - Widget que renderiza um dia individual.
   - Não-destacado para dias fora do mês, destacado para mês atual.
   - Se `isPhaseChange`, exibe ícone PNG da fase com fundo contrastante.
@@ -93,3 +128,12 @@ Quando houver mudanças de arquitetura, registre a decisão neste arquivo. Exemp
 - mudança no padrão de roteamento;
 - inclusão de uma API externa ou cache;
 - integração de regras de classificação de dias de pesca.
+
+## Arquivos de referência (core)
+
+- `lib/core/services/interfaces/service_interface.dart`
+- `lib/core/services/repositories/weather_repository.dart`
+- `lib/core/services/models/weather_model.dart`
+- `lib/core/local/models/weather_local_model.dart`
+- `lib/core/local/repositories/weather_local_repository.dart`
+- `lib/core/local/objectbox/objectbox_database.dart`

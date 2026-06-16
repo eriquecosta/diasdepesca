@@ -10,15 +10,19 @@ Este documento reúne o backlog e os próximos passos para o app `Dias de Pesca`
 ## Estado atual
 
 - Arquitetura básica com `flutter_modular` e `mobx`.
-- Home module implementado como ponto de partida.
+- Calendar module implementado como ponto de partida.
 - Documentação inicial estabelecida.
+- Serviço de clima (`WeatherRepository`) integrado com Open-Meteo.
+- Cache local com ObjectBox implementado para clima (`WeatherLocalRepository`).
+- Regra de atualização diária implementada (compara apenas dia/mês/ano).
+- Cobertura de testes unitários adicionada para serviço REST e base local com mocks.
 
 ## Próximos passos imediatos
 
-- Implementar cálculo de fases lunares em `core/` usando Jean Meeus.
-- Construir o calendário mensal com marcação de fases.
-- Definir regras de classificação de dias de pesca (ruim, intermediário, bom).
-- Exibir cores e indicadores de qualidade no calendário.
+- Integrar WeatherRepository ao fluxo da UI (store/page).
+- Definir política de expiração de cache local (ex.: validade de N horas para uso intra-dia, se necessário).
+- Adicionar tratamento de estado de erro/offline na tela de clima.
+- Evoluir cobertura com testes de integração do fluxo REST -> local -> UI.
 
 ## Futuro
 

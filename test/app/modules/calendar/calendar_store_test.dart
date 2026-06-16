@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dias_de_pesca/app/modules/home/home_store.dart';
+import 'package:dias_de_pesca/app/modules/calendar/calendar_store.dart';
 
 void main() {
-  late HomeStore store;
+  late CalendarStore store;
 
   setUp(() {
-    store = HomeStore();
+    store = CalendarStore();
   });
 
-  group('HomeStore', () {
+  group('CalendarStore', () {
     test('deve ser instanciado sem erros', () {
       expect(store, isNotNull);
     });

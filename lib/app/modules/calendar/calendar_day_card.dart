@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'home_store.dart';
+import 'calendar_store.dart';
 import 'package:dias_de_pesca/core/moon/moon_service.dart';
 
-class HomeDayCard extends StatelessWidget {
+class CalendarDayCard extends StatelessWidget {
   final CalendarDay day;
   final bool isToday;
 
-  const HomeDayCard({super.key, required this.day, required this.isToday});
+  const CalendarDayCard({super.key, required this.day, required this.isToday});
 
   String _assetForPhase(MoonPhase phase) {
     switch (phase) {
@@ -41,7 +41,7 @@ class HomeDayCard extends StatelessWidget {
     final defaultTextColor =
         day.isInCurrentMonth
             ? colorScheme.onSurface
-            : colorScheme.onSurface.withAlpha(115);
+            : colorScheme.onSurface.withValues(alpha: 115 / 255);
     final dayTextStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
       color: defaultTextColor,
       fontWeight: FontWeight.w500,
@@ -72,7 +72,7 @@ class HomeDayCard extends StatelessWidget {
         break;
     }
     if (classificationColor != null) {
-      backgroundColor = classificationColor.withOpacity(opacity);
+      backgroundColor = classificationColor.withValues(alpha: opacity);
     }
 
     Widget child = Text(
@@ -128,7 +128,7 @@ class HomeDayCard extends StatelessWidget {
                   context: context,
                   builder:
                       (ctx) => AlertDialog(
-                        title: Text('${_labelForPhase(day.phase)}'),
+                        title: Text(_labelForPhase(day.phase)),
                         content: Text(message),
                         actions: [
                           TextButton(

@@ -1,10 +1,12 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dias_de_pesca/app/modules/home/home_store.dart';
+import 'package:dias_de_pesca/app/modules/calendar/calendar_store.dart';
 import 'package:dias_de_pesca/core/moon/moon_service.dart';
 
 void main() {
   test('diagnose good days for displayed month', () {
-    final store = HomeStore();
+    final store = CalendarStore();
     final displayedMonth = store.displayedMonth;
     final firstOfMonth = DateTime(displayedMonth.year, displayedMonth.month, 1);
     final lastOfMonth = DateTime(
@@ -19,8 +21,9 @@ void main() {
     final events = MoonService.phaseEventsBetween(start.toUtc(), end.toUtc());
 
     // Normalize event dates to local date-only and group by phase
-    final Map<MoonPhase, List<DateTime>> eventsByPhase = {};
-    for (final p in MoonPhase.values) eventsByPhase[p] = [];
+    final Map<MoonPhase, List<DateTime>> eventsByPhase = {
+      for (final phase in MoonPhase.values) phase: <DateTime>[],
+    };
     for (final ev in events) {
       final local = ev.instantUtc.toLocal();
       final d = DateTime(local.year, local.month, local.day);

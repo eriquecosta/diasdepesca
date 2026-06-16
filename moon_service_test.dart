@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:dias_de_pesca/core/moon/moon_service.dart';
 
 void main() {
@@ -7,6 +9,8 @@ void main() {
   print('events count=${events.length}');
   for (final event in events) {
     final local = event.instantUtc.toLocal();
-    print('${event.phase}: ${event.instantUtc.toIso8601String()} UTC | ${local.toString()} LOCAL');
+    print(
+      '${event.phase}: ${event.instantUtc.toIso8601String()} UTC | ${local.toString()} LOCAL',
+    );
   }
 }

@@ -11,11 +11,10 @@ O objetivo principal é exibir um calendário mensal que marque:
 
 ## O que funciona agora
 
-- **HomePage / Calendário:** a tela principal apresenta um calendário mensal em grid 7x6 (domingo → sábado), navegável por mês, com botão `Hoje`. As células (`HomeDayCard`) exibem a data, destaque para o dia atual e (quando aplicável) um ícone representando a fase lunar.
-- **Marcação de mudança de fase:** o app calcula instantes precisos (UTC) das mudanças de fase lunar e mapeia cada evento ao dia local correspondente — o `HomeStore` marca esses dias como "mudança de fase" para exibição no calendário.
- - **Marcação de mudança de fase:** o app calcula instantes precisos (UTC) das mudanças de fase lunar e mapeia cada evento ao dia local correspondente — o `HomeStore` marca esses dias como "mudança de fase" para exibição no calendário.
+- **CalendarPage / Calendário:** a tela principal apresenta um calendário mensal em grid 7x6 (domingo → sábado), navegável por mês, com botão `Hoje`. As células (`CalendarDayCard`) exibem a data, destaque para o dia atual e (quando aplicável) um ícone representando a fase lunar.
+- **Marcação de mudança de fase:** o app calcula instantes precisos (UTC) das mudanças de fase lunar e mapeia cada evento ao dia local correspondente — o `CalendarStore` marca esses dias como "mudança de fase" para exibição no calendário.
 
-- **Classificação de dias de pesca:** o calendário marca dias como *Ruim*, *Intermediário* ou *Bom* com cores e opacidade baseadas nas regras lunares; o dia atual pode receber classificação quando aplicável. As regras e precedências estão implementadas em `lib/app/modules/home/home_store.dart` e resumidas abaixo:
+- **Classificação de dias de pesca:** o calendário marca dias como *Ruim*, *Intermediário* ou *Bom* com cores e opacidade baseadas nas regras lunares; o dia atual pode receber classificação quando aplicável. As regras e precedências estão implementadas em `lib/app/modules/calendar/calendar_store.dart` e resumidas abaixo:
 
 - **Bom:**
   - Primeiro período: começa na troca para **Lua Minguante** e vai até o dia da troca para **Lua Nova** menos 3 dias.
@@ -37,6 +36,7 @@ As legendas visuais (ícones de fase e círculos de cor para qualidade) aparecem
 - **Interação:** tocar em um dia que contém um evento de fase abre um `AlertDialog` com a hora do evento em horário local (e a equivalência em UTC), formatada para clareza.
 - **Ícones e legenda:** são usados PNGs para as quatro fases (nova, crescente, cheia, minguante) com fundo circular contrastante para garantir legibilidade; há uma legenda visual abaixo do calendário.
 - **Cálculo lunar local:** `lib/core/moon/moon_service.dart` contém o `MoonService`, que implementa fórmulas inspiradas em Jean Meeus para estimar instantes de fase lunar. O serviço expõe `phaseEventsBetween(...)` e `phaseEventForLocalDate(...)` e foi validado contra referências (ex.: INMET) com precisão de minutos.
+- **Serviço de clima (REST + cache local):** `WeatherRepository` busca dados na Open-Meteo e persiste no ObjectBox. A chamada HTTP é feita apenas quando não existe cache local ou quando o último cache é de dia anterior (comparação por dia/mês/ano, ignorando hora). O método `get()` retorna o último registro local.
 
 ---
 
@@ -47,6 +47,9 @@ As legendas visuais (ícones de fase e círculos de cor para qualidade) aparecem
 - flutter_modular
 - mobx + flutter_mobx
 - build_runner + mobx_codegen
+- objectbox (persistencia local)
+- json_annotation + json_serializable
+- http
 
 ---
 
@@ -57,6 +60,7 @@ Este projeto foi criado para ser:
 - simples e de fácil manutenção;
 - modular, com uma separação clara entre rotas, estado e apresentação;
 - baseado em cálculo local de fases lunares, sem depender de APIs externas;
+- com base local em ObjectBox para cache e dados offline;
 - pronto para evoluir com regras de negócio definidas posteriormente.
 
 ---
@@ -65,8 +69,10 @@ Este projeto foi criado para ser:
 
 Documentação detalhada dos módulos está em `docs/`. Consulte os documentos abaixo para entender responsabilidades, fluxo e integrações:
 
-- [Home (calendário)](docs/home.md) — descrição da `HomePage`, `HomeStore` e integração com o `MoonService`.
+- [Calendar (calendário)](docs/calendar.md) — descrição da `CalendarPage`, `CalendarStore` e integração com o `MoonService`.
 - [Arquitetura](docs/architecture.md) — visão geral da arquitetura do projeto.
+- [Estratégia de testes](docs/testing.md) — cobertura de testes para Moon, Calendar, serviços REST e base local.
+- [Weather Data (serviço + cache)](docs/weather_data.md) — fluxo de sincronização REST e persistência local com ObjectBox.
 
 ---
 
@@ -92,7 +98,8 @@ Para executar os testes:
 rtk flutter test
 ```
 
-O projeto já inclui um teste de exemplo para a `HomeStore` e um teste de widget básico.
+O projeto já inclui um teste de exemplo para a `CalendarStore` e um teste de widget básico.
+Também possui testes unitários para o `WeatherRepository` (mock de API e datasource local) e para `WeatherLocalRepository` (mock de `Box` do ObjectBox).
 
 ---
 
@@ -110,6 +117,7 @@ O projeto já inclui um teste de exemplo para a `HomeStore` e um teste de widget
 - A estrutura segue convenções de `flutter_modular` e `mobx`.
 - Não edite manualmente arquivos gerados como `*.g.dart`.
 - As decisões de arquitetura e o estilo do código são orientados pelo arquivo `./.github/copilot-instructions.md`.
+- A persistência local usa ObjectBox em `lib/core/local/`; para Weather, a estratégia atual é armazenar uma cópia JSON do `WeatherModel` para reaproveitar o mesmo mapeamento do serviço REST.
 
 ## Documentos de suporte
 
@@ -117,4 +125,5 @@ O projeto já inclui um teste de exemplo para a `HomeStore` e um teste de widget
 - [Diretrizes de código](docs/coding-guidelines.md) — reúne convenções de código e estilo do projeto.
 - [Estratégia de testes](docs/testing.md) — define a estratégia de testes.
 - [Roadmap](docs/roadmap.md) — lista o backlog e os próximos passos.
+- [Weather Data](docs/weather_data.md) — detalha o fluxo de dados de clima em `core/services` e `core/local`.
 
