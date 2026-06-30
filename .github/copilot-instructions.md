@@ -29,20 +29,50 @@ rtk proxy <cmd>       # Run raw (no filtering) but track usage
 ## Contexto do Projeto
 
 - **Nome:** Dias de Pesca
-- **Dominio:** app de sugestao de melhores dias para pesca baseado nas fases da lua.
-- **Funcionalidade principal:** exibir um calendario mensal marcando os dias de mudanca de fase lunar e colorindo os dias de pesca conforme qualidade (ruim, intermediario, bom). As regras de classificacao serao definidas posteriormente.
-- **Calculo lunar:** realizado localmente (sem internet), usando algoritmo astronomico baseado em Jean Meeus. Encapsulado em service em `core/`.
-- **Serviço lunar (core):** `lib/core/moon/moon_service.dart` implementa `MoonService` com algoritmo astronômico preciso baseado em Jean Meeus. Métodos:\n  - `phaseForDate(DateTime)`: fase predominante do dia (aproximado).\n  - `phaseEventsBetween(start, end)`: instantes UTC exatos de eventos em intervalo.\n  - `phaseEventForLocalDate(date)`: encontra evento que ocorre em um dia local.\n  - Validado contra INMET 2026 com precisão de minutos.\n- **CalendarPage:** calendário mensal (grid 7x6, domingo-sábado) com:\n  - Marcação visual de fases lunares com ícones PNG e fundo contrastante.\n  - Clique em dia com fase mostra `AlertDialog` com data/hora local do evento.\n  - Legenda visual das 4 fases, botões de navegação (`<` `>`) e botão \"Hoje\".\n- **Tipo:** app Flutter (escopo inicial, em evolucao incremental).
-- **Objetivo:** priorizar simplicidade, legibilidade e baixo acoplamento.
-- **Direcao:** gerar codigo pronto para manutencao, sem excesso de abstracoes.
-- **Gerenciamento de rotas:** `flutter_modular`.
+- **Domínio:** app de sugestão de melhores dias para pesca baseado nas fases da lua + dados meteorológicos em tempo real.
+- **Funcionalidades principais:**
+  - **CalendarPage:** calendário mensal marcando dias de mudança de fase lunar com cores de qualidade de pesca (ruim, intermediário, bom).
+  - **WeatherModule:** integração com Open-Meteo (REST + GPS) para exibição de temperatura, pressão e previsão horária.
+  - **LocationService:** obtenção de GPS com permissões nativas (iOS/Android).
+  - **Cálculo lunar local:** sem dependência de APIs, usando algoritmo astronômico baseado em Jean Meeus.
+  - **Persistência local:** ObjectBox com padrão upsert por data para clima.
+- **Serviço lunar (core):** `lib/core/moon/moon_service.dart` com métodos:
+  - `phaseForDate(DateTime)`: fase predominante do dia.
+  - `phaseEventsBetween(start, end)`: instantes UTC exatos de eventos.
+  - `phaseEventForLocalDate(date)`: evento de fase em um dia local.
+  - Validado contra INMET 2026 com precisão de minutos.
+- **LocationService (core):** `lib/core/services/repositories/location_service.dart` com:
+  - Verificação de serviço de GPS ativado.
+  - Solicitação e validação de permissões.
+  - Obtenção de lat/long via Geolocator.
+- **WeatherModule (app):** integração de clima com FlutterModular, MobX e cache local:
+  - `WeatherStore` solicita localização, lê cache local quando disponível e sincroniza fetch remoto.
+  - `WeatherRepository` chama Open-Meteo com lat/long.
+  - `WeatherLocalRepository` persiste com upsert por data (um registro/dia).
+  - Modelo `WeatherModel` com campos `hourly` e `hourly_units` opcionais para aceitar respostas sem dados horários.
+  - API atual usa `pressure_msl` (substituindo `surface_pressure`) e suporte a `wind_gusts_10m` + `wind_direction_10m`.
+  - Repositório preserva dados horários em cache quando a resposta vier sem `hourly`.
+- **Tipo:** app Flutter (escopo em evolução incremental).
+- **Objetivo:** priorizar simplicidade, legibilidade, modularidade e baixo acoplamento.
+- **Direção:** código pronto para manutenção, sem excesso de abstrações.
+- **Gerenciamento de rotas:** `flutter_modular` com injeção de dependência automática.
 - **Gerenciamento de estado:** `mobx` com code generation (`mobx_codegen` + `build_runner`).
-- **Tema inicial:** paleta náutica com primária `#2A6F97`, secundária `#014F86`, terciária `#A9D6E5`; fundos de tela devem ser brancos.
-- **Local do tema:** centralize estilos em `lib/core/theme/app_theme.dart` e use `Theme.of(context)` para cores e fundos.
+- **Persistência local:** ObjectBox com inicialização idempotente e segura contra corrida (`Store.isOpen()` + `Store.attach()`).
+- **Ciclo de vida iOS:** FlutterEngine criado explicitamente no `SceneDelegate` para garantir registro de plugins.
+- **Tema:** paleta náutica com primária `#2A6F97`, secundária `#014F86`, terciária `#A9D6E5`; fundos brancos.
+- **Centralização de estilos:** `lib/core/theme/app_theme.dart` com uso de `Theme.of(context)` para cores/fundos.
 
 ## Implementações atuais
 
- - criar o calendário mensal com marcação de fases e cores de qualidade; (implementado: classificação de dias Ruim/Intermediário/Bom com cores e regras baseadas em fases)
+- ✅ Calendário mensal com marcação de fases e cores de qualidade (Ruim/Intermediário/Bom).
+- ✅ Localização GPS com permissões (iOS/Android).
+- ✅ Sincronização REST com Open-Meteo (temperatura, pressão, previsão horária).
+- ✅ Cache local com ObjectBox e upsert por data.
+- ✅ Modelo Weather com campos hourly opcionais.
+- ✅ Pressão migrada para `pressure_msl` em query/model/store/UI/testes.
+- ✅ Suporte a rajadas e direção do vento (`wind_gusts_10m`, `wind_direction_10m`).
+- ✅ Gráficos horários nas 4 abas com rolagem e padding lateral para evitar corte de extremos.
+- ✅ Cobertura de testes para Moon, Calendar, Weather, Location e persistência local.
 
 
 ## Documentação de projeto
@@ -81,7 +111,7 @@ Arquivos sempre em `snake_case.dart`. Sufixo obrigatorio conforme tipo:
 | Widget      | `product_card_widget.dart` | `ProductCardWidget`     |
 | Repositorio | `user_repository.dart`     | `UserRepository`        |
 | Servico     | `auth_service.dart`        | `AuthService`           |
-| Interface   | `service_interface.dart`   | `ServiceInterface`      |
+| Interface   | `weather_interface.dart`   | `IWeather`            |
 | Model       | `user_model.dart`          | `UserModel`             |
 | Entity      | `user_entity.dart`         | `UserEntity`            |
 
@@ -128,7 +158,7 @@ lib/
   core/
     services/
       interfaces/
-        service_interface.dart
+        weather_interface.dart
       repositories/
         # classes concretas de repositorios de servico
       models/
@@ -137,8 +167,8 @@ lib/
 
 Regras obrigatorias:
 
-- `lib/core/services/interfaces/service_interface.dart` deve conter uma `abstract class ServiceInterface<T>` com os metodos `Future<bool> fetch()` e `Future<T> get()`.
-- Toda classe em `lib/core/services/repositories/` deve implementar `ServiceInterface` e os dois metodos do contrato (`fetch` e `get`).
+- Cada assunto de servico deve declarar sua propria interface em `lib/core/services/interfaces/`, usando o padrao de arquivo `${serviceName}_interface.dart` e classe `I${ServiceName}`, como `weather_interface.dart` com `IWeather`.
+- Toda classe em `lib/core/services/repositories/` deve implementar a interface do proprio dominio e os metodos do contrato (`fetch` e `get`).
 - Toda classe em `lib/core/services/models/` deve usar `json_annotation` para facilitar conversao de dados recebidos dos servicos.
 - Para modelos anotados, manter codegen com `build_runner` e arquivos `*.g.dart` sem edicao manual.
 - Para repositorios com cache local, `fetch` deve sincronizar dados remotos e persistir localmente quando houver sucesso.
@@ -191,15 +221,25 @@ rtk flutter test
 
 ## Diretrizes para Respostas do Copilot
 
- - O dia atual pode receber classificação quando aplicável (não é mais desmarcado automaticamente).
-## iOS UIScene Lifecycle (iOS 13+)
+- O dia atual pode receber classificação quando aplicável.
+- Sempre fazer fetch de clima para manter `current` sincronizado (com `hourly` ajustável).
+- LocationService deve sempre ser injetado em WeatherStore.
+- ObjectBox.init() é idempotente e segura contra concorrência.
+- Testes devem usar mocks de LocationService e WeatherRepository.
+## iOS UIScene Lifecycle e Plugin Registration (iOS 13+)
 
-O projeto está configurado para usar o ciclo de vida moderno do UIScene, conforme recomendado pela Apple:
+O projeto usa o ciclo de vida moderno do UIScene com registro explícito de plugins:
 
-- **SceneDelegate.swift**: Gerencia o ciclo de vida das cenas (telas). Não edite manualmente, pois é gerado pelo Xcode.
-- **Info.plist**: Contém `UIApplicationSceneManifest` que define o suporte a múltiplas cenas (atualmente desabilitado com `UIApplicationSupportsMultipleScenes=false`).
-- **AppDelegate.swift**: Mantém compatibilidade com eventos de nível de aplicação (ex.: push notifications, app lifecycle global).
+- **SceneDelegate.swift**: 
+  - Cria `FlutterEngine` explicitamente com `engine.run()`.
+  - Registra plugins via `GeneratedPluginRegistrant.register(with: engine)`.
+  - Cria `FlutterViewController` com esse engine para garantir acesso ao Geolocator e outros plugins.
+  - Sem isso, plugins retornam `MissingPlugionException` em runtime.
 
-Isso garante compatibilidade com iOS 13+ e evita avisos futuros do Xcode sobre obsolescência de `UIApplication` lifecycle.
+- **AppDelegate.swift**: Mantém compatibilidade com eventos globais (push, app lifecycle).
 
-**Não remova** as chaves `UIApplicationSceneManifest` do Info.plist, pois isso causará avisos de deprecação em versões futuras do iOS/Xcode.
+- **Info.plist**: Contém permissões de localização:
+  - `NSLocationWhenInUseUsageDescription`
+  - `NSLocationAlwaysAndWhenInUseUsageDescription`
+
+Isso garante compatibilidade com iOS 13+ e acesso a GPS sem erros de plugin.

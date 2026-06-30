@@ -34,21 +34,33 @@ Este documento descreve a abordagem de testes do projeto `Dias de Pesca`.
 - Evite dependências externas nas suítes de testes.
 - Prefira testes pequenos, rápidos e fáceis de entender.
 
-### Padrão adotado para Weather
+### Padrão adotado para Weather + Location
+
+- `LocationService`:
+	- mock de permissões via função injetada (`checkPermission`).
+	- mock de serviço de GPS via função injetada (`isLocationServiceEnabled`).
+	- mock de obtenção de posição via função injetada (`getCurrentPosition`).
+	- testes validam cenários: GPS ativado/desativado, permissão concedida/negada/nunca_mais.
 
 - `WeatherRepository`:
 	- mock de API via função injetada (`httpGet`).
-	- mock de relógio via função injetada (`now`) para validar regra de data diária.
 	- mock da camada local via contrato `WeatherLocalDataSource`.
+	- testes validam: fetch com/suporte a hourly, upsert por data, erro de API, e preservação de `hourly/hourly_units` quando resposta vier sem bloco horário.
 
 - `WeatherLocalRepository`:
-	- mock de `Box<WeatherLocalModel>` (ObjectBox) para testar `save`, seleção do último registro e conversão de payload.
+	- mock de `Box<WeatherLocalModel>` (ObjectBox) para testar `save`, `saveOrUpdateToday`, seleção do último registro.
+	- testes validam: criação vs atualização, comparação de data (ignorar hora), conversão de payload.
 
-Arquivos de teste adicionados:
+- `WeatherStore`:
+	- mock de `LocationService` e `WeatherRepository`.
+	- testes validam: fluxo completo (localização → fetch → persistência), tratamento de erros, estado observável e leitura de `pressure_msl` no estado atual.
 
-- `test/core/services/weather_repository_test.dart`
-- `test/core/local/weather_local_repository_test.dart`
-- `test/fixtures/weather_fixture.dart`
+Arquivos de teste:
+
+- `test/app/modules/weather/weather_store_test.dart` (4 testes)
+- `test/core/services/weather_repository_test.dart` (7 testes)
+- `test/core/local/weather_local_repository_test.dart` (4 testes)
+- `test/fixtures/weather_fixture.dart` (dados fixtures para testes)
 
 ## Comandos
 
@@ -56,13 +68,31 @@ Arquivos de teste adicionados:
 rtk flutter test
 ```
 
-Para rodar somente os novos testes:
+Para rodar testes específicos:
 
 ```bash
+rtk flutter test test/app/modules/weather/weather_store_test.dart
 rtk flutter test test/core/services/weather_repository_test.dart
 rtk flutter test test/core/local/weather_local_repository_test.dart
+rtk flutter test test/core/moon/moon_service_test.dart
 ```
 
-## Atualização da estratégia
+## Status de cobertura
 
-Quando o projeto evoluir para novas funcionalidades, registre neste documento quais áreas precisam de cobertura adicional e quais testes foram adicionados.
+Total: **22 testes passando**
+
+| Módulo | Testes | Status |
+|--------|--------|--------|
+| MoonService | 2 | ✅ Completo |
+| CalendarStore | 2 | ✅ Completo |
+| WeatherStore | 4 | ✅ Completo (location, fetch, cache) |
+| WeatherRepository | 7 | ✅ Completo (API, upsert, horário) |
+| WeatherLocalRepository | 4 | ✅ Completo (persistência, upsert) |
+| Widget | 1 | ⏳ Básico |
+| Diagnóstico | 1 | ℹ️ Execução auxiliar |
+
+**Cenários cobertos:**
+- ✅ Localização (GPS ativado, permissão concedida, erro de permissão)
+- ✅ Fetch de clima (com/sem hourly, cache, erro de API)
+- ✅ Persistência (upsert por data, último registro, conversão JSON)
+- ✅ Cálculo lunar (fases, eventos, precisão)

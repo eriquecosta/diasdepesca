@@ -4,12 +4,18 @@ import Flutter
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
   var window: UIWindow?
+  private lazy var flutterEngine: FlutterEngine = {
+    let engine = FlutterEngine(name: "main_engine")
+    engine.run()
+    GeneratedPluginRegistrant.register(with: engine)
+    return engine
+  }()
 
   func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
     guard let windowScene = (scene as? UIWindowScene) else { return }
 
     let window = UIWindow(windowScene: windowScene)
-    let controller = FlutterViewController()
+    let controller = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
     window.rootViewController = controller
     self.window = window
     window.makeKeyAndVisible()

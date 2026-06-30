@@ -77,7 +77,7 @@ void main() {
 
         expect(weather, isNotNull);
         expect(weather?.timezone, 'GMT');
-        expect(weather?.hourly.time.length, 2);
+        expect(weather?.hourly?.time.length, 2);
       },
     );
   });

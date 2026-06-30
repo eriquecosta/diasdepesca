@@ -12,20 +12,23 @@ mixin _$CalendarStore on _CalendarStoreBase, Store {
   Computed<String>? _$monthLabelComputed;
 
   @override
-  String get monthLabel =>
-      (_$monthLabelComputed ??= Computed<String>(() => super.monthLabel,
-              name: '_CalendarStoreBase.monthLabel'))
-          .value;
+  String get monthLabel => (_$monthLabelComputed ??= Computed<String>(
+    () => super.monthLabel,
+    name: '_CalendarStoreBase.monthLabel',
+  )).value;
   Computed<List<CalendarDay>>? _$calendarDaysComputed;
 
   @override
-  List<CalendarDay> get calendarDays => (_$calendarDaysComputed ??=
-          Computed<List<CalendarDay>>(() => super.calendarDays,
-              name: '_CalendarStoreBase.calendarDays'))
-      .value;
+  List<CalendarDay> get calendarDays =>
+      (_$calendarDaysComputed ??= Computed<List<CalendarDay>>(
+        () => super.calendarDays,
+        name: '_CalendarStoreBase.calendarDays',
+      )).value;
 
-  late final _$displayedMonthAtom =
-      Atom(name: '_CalendarStoreBase.displayedMonth', context: context);
+  late final _$displayedMonthAtom = Atom(
+    name: '_CalendarStoreBase.displayedMonth',
+    context: context,
+  );
 
   @override
   DateTime get displayedMonth {
@@ -38,14 +41,19 @@ mixin _$CalendarStore on _CalendarStoreBase, Store {
   @override
   set displayedMonth(DateTime value) {
     _$displayedMonthAtom.reportWrite(
-        value, _displayedMonthIsInitialized ? super.displayedMonth : null, () {
-      super.displayedMonth = value;
-      _displayedMonthIsInitialized = true;
-    });
+      value,
+      _displayedMonthIsInitialized ? super.displayedMonth : null,
+      () {
+        super.displayedMonth = value;
+        _displayedMonthIsInitialized = true;
+      },
+    );
   }
 
-  late final _$currentDateAtom =
-      Atom(name: '_CalendarStoreBase.currentDate', context: context);
+  late final _$currentDateAtom = Atom(
+    name: '_CalendarStoreBase.currentDate',
+    context: context,
+  );
 
   @override
   DateTime get currentDate {
@@ -58,19 +66,25 @@ mixin _$CalendarStore on _CalendarStoreBase, Store {
   @override
   set currentDate(DateTime value) {
     _$currentDateAtom.reportWrite(
-        value, _currentDateIsInitialized ? super.currentDate : null, () {
-      super.currentDate = value;
-      _currentDateIsInitialized = true;
-    });
+      value,
+      _currentDateIsInitialized ? super.currentDate : null,
+      () {
+        super.currentDate = value;
+        _currentDateIsInitialized = true;
+      },
+    );
   }
 
-  late final _$_CalendarStoreBaseActionController =
-      ActionController(name: '_CalendarStoreBase', context: context);
+  late final _$_CalendarStoreBaseActionController = ActionController(
+    name: '_CalendarStoreBase',
+    context: context,
+  );
 
   @override
   void moveToPreviousMonth() {
     final _$actionInfo = _$_CalendarStoreBaseActionController.startAction(
-        name: '_CalendarStoreBase.moveToPreviousMonth');
+      name: '_CalendarStoreBase.moveToPreviousMonth',
+    );
     try {
       return super.moveToPreviousMonth();
     } finally {
@@ -81,7 +95,8 @@ mixin _$CalendarStore on _CalendarStoreBase, Store {
   @override
   void moveToNextMonth() {
     final _$actionInfo = _$_CalendarStoreBaseActionController.startAction(
-        name: '_CalendarStoreBase.moveToNextMonth');
+      name: '_CalendarStoreBase.moveToNextMonth',
+    );
     try {
       return super.moveToNextMonth();
     } finally {
@@ -92,7 +107,8 @@ mixin _$CalendarStore on _CalendarStoreBase, Store {
   @override
   void goToCurrentMonth() {
     final _$actionInfo = _$_CalendarStoreBaseActionController.startAction(
-        name: '_CalendarStoreBase.goToCurrentMonth');
+      name: '_CalendarStoreBase.goToCurrentMonth',
+    );
     try {
       return super.goToCurrentMonth();
     } finally {

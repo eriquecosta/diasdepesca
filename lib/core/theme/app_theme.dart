@@ -33,7 +33,7 @@ class AppTheme {
       foregroundColor: Colors.white,
       elevation: 0,
     ),
-    cardTheme: const CardTheme(
+    cardTheme: const CardThemeData(
       color: Colors.white,
       elevation: 1,
       margin: EdgeInsets.zero,
@@ -47,7 +47,7 @@ class AppTheme {
       fillColor: tertiary.withAlpha(31),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     ),
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelColor: Colors.white,
       unselectedLabelColor: tertiary,
     ),

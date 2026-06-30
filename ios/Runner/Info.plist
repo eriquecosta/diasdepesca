@@ -52,6 +52,10 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>O aplicativo precisa descobrir e conectar ao serviço de depuração local para habilitar o debugging no dispositivo iOS.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Necessário para obter sua localização e fornecer informações precisas de previsão do tempo e dicas de pesca.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Necessário para obter sua localização e fornecer informações precisas de previsão do tempo e dicas de pesca.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

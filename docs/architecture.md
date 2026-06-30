@@ -58,7 +58,7 @@ Subcamadas atuais em `core/`:
 
 - `moon/`: cálculo de fases lunares e eventos por data.
 - `services/`: integrações REST, contratos e modelos de API.
-  - `interfaces/`: contrato base (`ServiceInterface<T>` com `fetch` e `get`).
+  - `interfaces/`: contratos por domínio de serviço, como `IWeather`.
   - `models/`: serialização JSON via `json_annotation`.
   - `repositories/`: implementação de chamadas HTTP.
 - `local/`: persistência local com ObjectBox.
@@ -66,17 +66,29 @@ Subcamadas atuais em `core/`:
   - `repositories/`: operações de leitura/gravação no cache local.
   - `objectbox/`: inicialização e acesso ao `Store`.
 
-## Fluxo de dados (Weather)
+## Fluxo de dados (Weather + Location)
 
-Implementação atual de clima (`WeatherRepository` + `WeatherLocalRepository`):
+Implementação atual de clima e localização:
 
-1. `fetch()` consulta o último registro local.
-2. Se já houver cache do dia atual (mesmo dia/mês/ano), não chama API e retorna `true`.
-3. Se não houver cache ou o cache for de dia anterior, executa GET na Open-Meteo.
-4. Em sucesso, converte para `WeatherModel` e salva localmente no ObjectBox.
-5. `get()` retorna sempre o último registro local convertido em `WeatherModel`.
+1. **Obtenção de localização:**
+   - `LocationService` verifica se serviço de GPS está ativo.
+   - Se ativo, solicita permissão ao usuário.
+   - Se concedida, retorna `Position` com latitude/longitude.
+   - Se negada ou não ativa, lança exceção com mensagem descritiva.
 
-Esse fluxo reduz chamadas de rede e mantém disponibilidade offline para leitura.
+2. **Sincronização de clima:**
+   - `WeatherStore` chama `LocationService.getCurrentPosition()`.
+  - Com lat/long válidos, tenta carregar cache local para renderização inicial rápida (quando existir registro do dia).
+  - Em seguida executa sincronização remota no repositório e atualiza o estado observável.
+   - `WeatherRepository` executa GET na Open-Meteo com parâmetros dinâmicos.
+  - Em sucesso, `WeatherLocalRepository` persiste com padrão **upsert por data** — um registro por dia, sempre atualizado.
+  - Se a resposta não trouxer `hourly/hourly_units`, o repositório preserva os dados horários do cache mais recente (merge defensivo).
+
+3. **Acesso aos dados:**
+   - `get()` retorna sempre o último registro local convertido em `WeatherModel`.
+   - Observables no `WeatherStore` expõem temperatura, pressão, previsão horária (se disponível).
+
+**Benefício:** mantém `current` sincronizado, preserva gráficos horários em cenários de payload parcial e garante disponibilidade offline via cache local.
 
 ## Convenções de responsabilidade
 
@@ -131,8 +143,10 @@ Quando houver mudanças de arquitetura, registre a decisão neste arquivo. Exemp
 
 ## Arquivos de referência (core)
 
-- `lib/core/services/interfaces/service_interface.dart`
+- `lib/core/services/interfaces/weather_interface.dart`
+- `lib/core/services/interfaces/location_interface.dart`
 - `lib/core/services/repositories/weather_repository.dart`
+- `lib/core/services/repositories/location_service.dart`
 - `lib/core/services/models/weather_model.dart`
 - `lib/core/local/models/weather_local_model.dart`
 - `lib/core/local/repositories/weather_local_repository.dart`

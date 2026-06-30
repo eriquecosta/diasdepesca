@@ -18,8 +18,8 @@ class WeatherModel {
   final WeatherCurrentUnits currentUnits;
   final WeatherCurrent current;
   @JsonKey(name: 'hourly_units')
-  final WeatherHourlyUnits hourlyUnits;
-  final WeatherHourly hourly;
+  final WeatherHourlyUnits? hourlyUnits;
+  final WeatherHourly? hourly;
 
   const WeatherModel({
     required this.latitude,
@@ -31,8 +31,8 @@ class WeatherModel {
     required this.elevation,
     required this.currentUnits,
     required this.current,
-    required this.hourlyUnits,
-    required this.hourly,
+    this.hourlyUnits,
+    this.hourly,
   });
 
   factory WeatherModel.fromJson(Map<String, dynamic> json) =>
@@ -52,8 +52,10 @@ class WeatherCurrentUnits {
   final String precipitation;
   @JsonKey(name: 'wind_speed_10m')
   final String windSpeed10m;
-  @JsonKey(name: 'surface_pressure')
-  final String surfacePressure;
+  @JsonKey(name: 'wind_direction_10m')
+  final String? windDirection10m;
+  @JsonKey(name: 'pressure_msl')
+  final String pressureMsl;
 
   const WeatherCurrentUnits({
     required this.time,
@@ -62,7 +64,8 @@ class WeatherCurrentUnits {
     required this.temperature2m,
     required this.precipitation,
     required this.windSpeed10m,
-    required this.surfacePressure,
+    this.windDirection10m,
+    required this.pressureMsl,
   });
 
   factory WeatherCurrentUnits.fromJson(Map<String, dynamic> json) =>
@@ -82,8 +85,10 @@ class WeatherCurrent {
   final double precipitation;
   @JsonKey(name: 'wind_speed_10m')
   final double windSpeed10m;
-  @JsonKey(name: 'surface_pressure')
-  final double surfacePressure;
+  @JsonKey(name: 'wind_direction_10m')
+  final double? windDirection10m;
+  @JsonKey(name: 'pressure_msl')
+  final double pressureMsl;
 
   const WeatherCurrent({
     required this.time,
@@ -92,7 +97,8 @@ class WeatherCurrent {
     required this.temperature2m,
     required this.precipitation,
     required this.windSpeed10m,
-    required this.surfacePressure,
+    this.windDirection10m,
+    required this.pressureMsl,
   });
 
   factory WeatherCurrent.fromJson(Map<String, dynamic> json) =>
@@ -108,8 +114,12 @@ class WeatherHourlyUnits {
   final String temperature2m;
   @JsonKey(name: 'wind_speed_10m')
   final String windSpeed10m;
-  @JsonKey(name: 'surface_pressure')
-  final String surfacePressure;
+  @JsonKey(name: 'wind_gusts_10m')
+  final String? windGusts10m;
+  @JsonKey(name: 'wind_direction_10m')
+  final String? windDirection10m;
+  @JsonKey(name: 'pressure_msl')
+  final String pressureMsl;
   final String precipitation;
   @JsonKey(name: 'precipitation_probability')
   final String precipitationProbability;
@@ -118,7 +128,9 @@ class WeatherHourlyUnits {
     required this.time,
     required this.temperature2m,
     required this.windSpeed10m,
-    required this.surfacePressure,
+    this.windGusts10m,
+    this.windDirection10m,
+    required this.pressureMsl,
     required this.precipitation,
     required this.precipitationProbability,
   });
@@ -136,8 +148,12 @@ class WeatherHourly {
   final List<double> temperature2m;
   @JsonKey(name: 'wind_speed_10m')
   final List<double> windSpeed10m;
-  @JsonKey(name: 'surface_pressure')
-  final List<double> surfacePressure;
+  @JsonKey(name: 'wind_gusts_10m')
+  final List<double>? windGusts10m;
+  @JsonKey(name: 'wind_direction_10m')
+  final List<double>? windDirection10m;
+  @JsonKey(name: 'pressure_msl')
+  final List<double> pressureMsl;
   final List<double> precipitation;
   @JsonKey(name: 'precipitation_probability')
   final List<double> precipitationProbability;
@@ -146,7 +162,9 @@ class WeatherHourly {
     required this.time,
     required this.temperature2m,
     required this.windSpeed10m,
-    required this.surfacePressure,
+    this.windGusts10m,
+    this.windDirection10m,
+    required this.pressureMsl,
     required this.precipitation,
     required this.precipitationProbability,
   });

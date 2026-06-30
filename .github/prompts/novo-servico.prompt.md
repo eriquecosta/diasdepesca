@@ -1,13 +1,26 @@
 ---
 agent: agent
-description: Cria scaffold de servico REST (Model + Repository) com json_annotation e contrato ServiceInterface
+description: Cria scaffold de servico REST com interface propria, model e repository
 ---
 
 Crie um novo servico chamado **`${input:serviceName:Nome do servico em snake_case (ex: weather, moon_phase, fish_forecast)}`** seguindo as convencoes do projeto.
 
 ## Arquivos a criar
 
-### 1. Model
+### 1. Interface
+
+Arquivo: `lib/core/services/interfaces/${input:serviceName}_interface.dart`
+
+```dart
+import '../models/${input:serviceName}_model.dart';
+
+abstract class I${input:serviceNamePascal} {
+  Future<bool> fetch();
+  Future<${input:serviceNamePascal}Model> get();
+}
+```
+
+### 2. Model
 
 Arquivo: `lib/core/services/models/${input:serviceName}_model.dart`
 
@@ -30,16 +43,16 @@ class ${input:serviceNamePascal}Model {
 }
 ```
 
-### 2. Repository
+### 3. Repository
 
 Arquivo: `lib/core/services/repositories/${input:serviceName}_repository.dart`
 
 ```dart
-import '../interfaces/service_interface.dart';
+import '../interfaces/${input:serviceName}_interface.dart';
 import '../models/${input:serviceName}_model.dart';
 
 class ${input:serviceNamePascal}Repository
-    implements ServiceInterface<${input:serviceNamePascal}Model> {
+  implements I${input:serviceNamePascal} {
   ${input:serviceNamePascal}Model? _cache;
 
   @override
@@ -64,7 +77,9 @@ class ${input:serviceNamePascal}Repository
 ## Regras obrigatorias
 
 - Use nomes em `snake_case` para arquivos e `PascalCase` para classes.
-- O repository deve implementar `ServiceInterface<${input:serviceNamePascal}Model>`.
+- A interface deve ficar em `lib/core/services/interfaces/${input:serviceName}_interface.dart`.
+- A interface deve se chamar `I${input:serviceNamePascal}`.
+- O repository deve implementar `I${input:serviceNamePascal}`.
 - O metodo `fetch` deve retornar `Future<bool>`.
 - O metodo `get` deve retornar `Future<${input:serviceNamePascal}Model>`.
 - O model deve usar `@JsonSerializable()` com `fromJson` e `toJson`.

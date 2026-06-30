@@ -24,7 +24,7 @@ Este documento reúne as principais convenções do projeto para manter o códig
 | Widget      | `product_card_widget.dart` | `ProductCardWidget`     |
 | Serviço     | `auth_service.dart`        | `AuthService`           |
 | Modelo      | `user_model.dart`          | `UserModel`             |
-| Interface   | `service_interface.dart`   | `ServiceInterface`      |
+| Interface   | `weather_interface.dart`     | `IWeather`             |
 | Repositório | `weather_repository.dart`  | `WeatherRepository`     |
 | Entidade    | `weather_local_model.dart` | `WeatherLocalModel`     |
 
@@ -37,10 +37,21 @@ Este documento reúne as principais convenções do projeto para manter o códig
 
 ## Serviços REST (`core/services`)
 
-- Toda integração REST deve implementar `ServiceInterface<T>`.
-- `fetch()` deve retornar `Future<bool>` e representar sucesso/falha da sincronização.
-- `get()` deve retornar `Future<T>` e ler da fonte de dados definida para o serviço (no caso de Weather, cache local).
+- Cada assunto de serviço deve ter sua própria interface em `lib/core/services/interfaces/`.
+- O arquivo da interface deve seguir o padrão `${serviceName}_interface.dart`.
+- A interface deve seguir o padrão `I${ServiceName}`.
+- O repositório concreto deve implementar a interface do próprio domínio.
+- `fetch(...)` deve retornar `Future<bool>` representando sucesso/falha da sincronização remota.
+- `get()` deve retornar `Future<T>` e ler da fonte definida para o serviço (ex.: Weather lê cache local).
 - Modelos de API devem usar `json_annotation` + `json_serializable`.
+- Campos opcionais em modelos REST devem ser nullable (`?`) para aceitar respostas parciais.
+
+## Serviços de Localização (`core/services`)
+
+- LocationService deve verificar estado de permissão e serviço (GPS ativado/desativado).
+- Lançar exceções descritivas para cada cenário (GPS off, permissão negada, timeout).
+- Sempre injetar LocationService em stores que precisem de lat/long.
+- Testes devem usar mocks de LocationService para garantir determinismo.
 
 ## Base local (`core/local`) com ObjectBox
 
@@ -48,6 +59,31 @@ Este documento reúne as principais convenções do projeto para manter o códig
 - Para payloads complexos, salvar JSON bruto (`payloadJson`) e converter com `toJson/fromJson` do modelo REST para evitar duplicação de mapeamento.
 - Repositórios locais devem isolar acesso a `Box` (sem espalhar ObjectBox na UI ou em stores).
 - Inicialização do banco deve ficar centralizada em `core/local/objectbox`.
+
+### Padrão Upsert
+
+Para dados que devem ser atualizados quando já existem:
+
+```dart
+Future<void> saveOrUpdateToday(WeatherModel model) async {
+  final existing = await getRecordForToday(); // Busca por data
+  if (existing != null) {
+    // Atualiza registro existente
+    existing.payloadJson = jsonEncode(model.toJson());
+    existing.cachedAt = DateTime.now();
+    box.put(existing);
+  } else {
+    // Cria novo registro
+    final local = WeatherLocalModel(
+      payloadJson: jsonEncode(model.toJson()),
+      cachedAt: DateTime.now(),
+    );
+    box.put(local);
+  }
+}
+```
+
+**Regra:** Comparação de data ignora hora (apenas ano/mês/dia).
 
 ## Estilo
 

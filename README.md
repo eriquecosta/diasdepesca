@@ -14,7 +14,16 @@ O objetivo principal é exibir um calendário mensal que marque:
 - **CalendarPage / Calendário:** a tela principal apresenta um calendário mensal em grid 7x6 (domingo → sábado), navegável por mês, com botão `Hoje`. As células (`CalendarDayCard`) exibem a data, destaque para o dia atual e (quando aplicável) um ícone representando a fase lunar.
 - **Marcação de mudança de fase:** o app calcula instantes precisos (UTC) das mudanças de fase lunar e mapeia cada evento ao dia local correspondente — o `CalendarStore` marca esses dias como "mudança de fase" para exibição no calendário.
 
-- **Classificação de dias de pesca:** o calendário marca dias como *Ruim*, *Intermediário* ou *Bom* com cores e opacidade baseadas nas regras lunares; o dia atual pode receber classificação quando aplicável. As regras e precedências estão implementadas em `lib/app/modules/calendar/calendar_store.dart` e resumidas abaixo:
+- **Classificação de dias de pesca:** o calendário marca dias como *Ruim*, *Intermediário* ou *Bom* com cores e opacidade baseadas nas regras lunares; o dia atual pode receber classificação quando aplicável. As regras e precedências estão implementadas em `lib/app/modules/calendar/calendar_store.dart` e resumidas abaixo.
+
+- **Localização GPS e clima em tempo real:**
+  - `LocationService` obtém latitude/longitude do dispositivo com suporte a permissões (iOS/Android).
+  - `WeatherRepository` sincroniza dados da Open-Meteo sempre que há localização válida.
+  - **Payload atual Open-Meteo:** `current` e `hourly` com `temperature_2m`, `precipitation`, `precipitation_probability`, `wind_speed_10m`, `wind_direction_10m`, `wind_gusts_10m` (hourly) e `pressure_msl`.
+  - **Robustez de cache:** quando a resposta vier sem `hourly`, o repositório preserva `hourly/hourly_units` do cache mais recente antes de persistir.
+  - `WeatherLocalRepository` implementa upsert por data — um registro por dia, sempre atualizado com dados mais recentes.
+  - **Modelo com null-safety para payload parcial** — respostas sem dados horários são aceitas sem erro.
+  - **WeatherPage em produção:** seção de condições atuais + 4 abas com gráficos (Temperatura, Chuva, Vento, Pressão), rolagem horizontal e padding lateral para evitar corte de extremos.
 
 - **Bom:**
   - Primeiro período: começa na troca para **Lua Minguante** e vai até o dia da troca para **Lua Nova** menos 3 dias.
@@ -36,7 +45,11 @@ As legendas visuais (ícones de fase e círculos de cor para qualidade) aparecem
 - **Interação:** tocar em um dia que contém um evento de fase abre um `AlertDialog` com a hora do evento em horário local (e a equivalência em UTC), formatada para clareza.
 - **Ícones e legenda:** são usados PNGs para as quatro fases (nova, crescente, cheia, minguante) com fundo circular contrastante para garantir legibilidade; há uma legenda visual abaixo do calendário.
 - **Cálculo lunar local:** `lib/core/moon/moon_service.dart` contém o `MoonService`, que implementa fórmulas inspiradas em Jean Meeus para estimar instantes de fase lunar. O serviço expõe `phaseEventsBetween(...)` e `phaseEventForLocalDate(...)` e foi validado contra referências (ex.: INMET) com precisão de minutos.
-- **Serviço de clima (REST + cache local):** `WeatherRepository` busca dados na Open-Meteo e persiste no ObjectBox. A chamada HTTP é feita apenas quando não existe cache local ou quando o último cache é de dia anterior (comparação por dia/mês/ano, ignorando hora). O método `get()` retorna o último registro local.
+- **Serviço de clima (REST + cache local + GPS):**
+  - `WeatherRepository` busca dados na Open-Meteo com lat/long do `LocationService`.
+  - `WeatherLocalRepository` persiste com padrão upsert por data (um registro/dia).
+  - Fetch é sempre executado para manter dados `current` sincronizados.
+  - O método `get()` retorna o último registro local convertido em `WeatherModel`.
 
 ---
 
@@ -44,12 +57,14 @@ As legendas visuais (ícones de fase e círculos de cor para qualidade) aparecem
 
 - Flutter 3.29.2
 - Dart 3.7.2
-- flutter_modular
-- mobx + flutter_mobx
-- build_runner + mobx_codegen
+- flutter_modular (roteamento)
+- mobx + flutter_mobx (state management)
+- build_runner + mobx_codegen (code generation)
 - objectbox (persistencia local)
-- json_annotation + json_serializable
-- http
+- json_annotation + json_serializable (serialização REST)
+- http (chamadas HTTP)
+- geolocator (localização GPS)
+- objectbox_flutter_libs (suporte Flutter para ObjectBox)
 
 ---
 
@@ -69,10 +84,15 @@ Este projeto foi criado para ser:
 
 Documentação detalhada dos módulos está em `docs/`. Consulte os documentos abaixo para entender responsabilidades, fluxo e integrações:
 
-- [Calendar (calendário)](docs/calendar.md) — descrição da `CalendarPage`, `CalendarStore` e integração com o `MoonService`.
-- [Arquitetura](docs/architecture.md) — visão geral da arquitetura do projeto.
-- [Estratégia de testes](docs/testing.md) — cobertura de testes para Moon, Calendar, serviços REST e base local.
-- [Weather Data (serviço + cache)](docs/weather_data.md) — fluxo de sincronização REST e persistência local com ObjectBox.
+- [Calendar (calendário)](docs/calendar.md) — `CalendarPage`, `CalendarStore` e cálculo lunar via `MoonService`.
+- [Arquitetura](docs/architecture.md) — visão geral: modularização, camadas core/app, fluxo de dados Weather+Location.
+- [Diretrizes de código](docs/coding-guidelines.md) — convenções Dart/Flutter, estrutura de arquivos, padrões MobX.
+- [Estratégia de testes](docs/testing.md) — cobertura para Moon, Calendar, serviços REST, base local e LocationService.
+- [Weather Data (serviço + cache)](docs/weather_data.md) — fluxo REST + persistência local com ObjectBox.
+- [Weather Page (UI)](docs/weather_page.md) — layout de tela, seções e abas meteorológicas.
+- [Weather Charts (gráficos)](docs/weather_charts.md) — gráficos de linha e barras para dados horários.
+- [Location](docs/location.md) — GPS e permissões nativas.
+- [Roadmap](docs/roadmap.md) — status, próximos passos e itens de backlog.
 
 ---
 
@@ -105,10 +125,11 @@ Também possui testes unitários para o `WeatherRepository` (mock de API e datas
 
 ## Próximos passos
 
-- implementar o cálculo de fases lunares usando algoritmo de Jean Meeus em `core/`;
-- criar o calendário mensal com marcação de fases e cores de qualidade;
-- definir e aplicar as regras de classificação de dias de pesca;
-- adicionar páginas e módulos adicionais conforme o fluxo do app.
+- Adicionar settings de localização manual ou permitir múltiplas localizações favoritas.
+- Expandir WeatherStore com mais observables (humidade, índice UV, avisos).
+- Criar página de detalhes com histórico de previsões.
+- Adicionar suporte a offline com sincronização em background.
+- Implementar notificações de dias com pesca bom/ruim.
 
 ---
 
